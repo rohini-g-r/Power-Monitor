@@ -4,918 +4,431 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Power Monitor | Live Dashboard</title>
+<title>Power Monitor</title>
 
 <style>
-:root {
-  --bg: #f4f6f8;
-  --card: #ffffff;
-  --text: #1a2330;
-  --muted: #6b7785;
-  --ok: #1b9e5a;
-  --bad: #d93025;
-  --blue: #2f6fed;
+:root{
+--bg:#f4f6f8;
+--card:#fff;
+--text:#1a2330;
+--muted:#6b7785;
+--ok:#1b9e5a;
+--bad:#d93025;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f141a;
-    --card: #1a212b;
-    --text: #e8edf3;
-    --muted: #8d99a8;
-    --ok: #3ddc84;
-    --bad: #ff6b5e;
-    --blue: #70a0ff;
-  }
+@media(prefers-color-scheme:dark){
+:root{
+--bg:#0f141a;
+--card:#1a212b;
+--text:#e8edf3;
+--muted:#8d99a8;
+--ok:#3ddc84;
+--bad:#ff6b5e;
+}}
+*{box-sizing:border-box}
+body{
+margin:0;padding:16px;
+background:var(--bg);
+color:var(--text);
+font-family:system-ui,sans-serif;
 }
-
-* {
-  box-sizing: border-box;
+.wrap{max-width:520px;margin:0 auto}
+h1{font-size:20px;margin:4px 0 16px}
+.card{
+background:var(--card);
+border-radius:14px;
+padding:16px;
+margin-bottom:12px;
 }
-
-body {
-  margin: 0;
-  padding: 16px;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, sans-serif;
+.label{color:var(--muted);font-size:13px}
+.range{color:var(--muted);font-size:12px;margin-top:2px}
+.status{font-size:22px;font-weight:700}
+.ok{color:var(--ok)}
+.bad{color:var(--bad)}
+.card.alert{outline:3px solid var(--bad)}
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;margin-bottom:12px;
 }
-
-.wrap {
-  max-width: 520px;
-  margin: auto;
+.grid .card{margin:0}
+.val{font-size:30px;font-weight:700;margin-top:4px}
+.unit{font-size:15px;font-weight:400;color:var(--muted)}
+svg{width:100%;height:90px;display:block}
+.tests{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tests button{
+flex:1;min-width:110px;padding:10px;
+font-size:14px;border:1px solid var(--muted);
+border-radius:10px;background:var(--card);
+color:var(--text);cursor:pointer;
 }
-
-h1 {
-  font-size: 24px;
-  margin: 4px 0 5px;
-}
-
-.subtitle {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 18px;
-}
-
-.card {
-  background: var(--card);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
-.label {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.range {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 3px;
-}
-
-.status {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 7px 0;
-}
-
-.ok {
-  color: var(--ok);
-}
-
-.bad {
-  color: var(--bad);
-}
-
-.card.alert {
-  outline: 2px solid var(--bad);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.grid .card {
-  margin: 0;
-  min-width: 0;
-}
-
-.val {
-  font-size: 27px;
-  font-weight: 700;
-  margin-top: 5px;
-  overflow-wrap: anywhere;
-}
-
-.unit {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--muted);
-}
-
-.connection {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.dot {
-  width: 9px;
-  height: 9px;
-  background: var(--muted);
-  border-radius: 50%;
-}
-
-.dot.online {
-  background: var(--ok);
-}
-
-.dot.offline {
-  background: var(--bad);
-}
-
-svg {
-  width: 100%;
-  height: 110px;
-  display: block;
-}
-
-.tests {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.tests button {
-  flex: 1;
-  min-width: 100px;
-  padding: 10px;
-  font-size: 13px;
-  border: 1px solid var(--muted);
-  border-radius: 10px;
-  background: var(--card);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.tests button.on {
-  background: var(--text);
-  color: var(--bg);
-}
-
-.footer {
-  text-align: center;
-  color: var(--muted);
-  font-size: 11px;
-  margin: 20px 0;
-}
-
+.tests button.on{background:var(--text);color:var(--bg)}
 </style>
 </head>
 
 <body>
-
 <div class="wrap">
 
-  <h1>⚡ POWER MONITOR</h1>
-  <div class="subtitle">
-    IoT POWER MONITORING AND FAULT DETECTION SYSTEM
-  </div>
+<h1>Power Monitor</h1>
 
-  <!-- SYSTEM STATUS -->
+<div class="card" id="statusCard">
+<div class="label">Supply status</div>
+<div class="status ok" id="status">Waiting for data...</div>
+<div class="label" id="note"></div>
+<div class="label" id="time">--</div>
+</div>
 
-  <div class="card" id="statusCard">
+<div class="grid">
 
-    <div class="label">Supply Status</div>
+<div class="card">
+<div class="label">Voltage</div>
+<div class="val" id="valV">
+<span id="v">--</span><span class="unit"> V</span>
+</div>
+<div class="range">Normal 216 to 230 V</div>
+</div>
 
-    <div class="status" id="status">
-      Waiting for data...
-    </div>
+<div class="card">
+<div class="label">Current</div>
+<div class="val" id="valI">
+<span id="i">--</span><span class="unit"> A</span>
+</div>
+<div class="range">Normal 9.8 to 10.2 A (adjust to your load)</div>
+</div>
 
-    <div class="label" id="note">
-      Connecting to ThingSpeak...
-    </div>
+<div class="card">
+<div class="label">Power</div>
+<div class="val" id="valP">
+<span id="p">--</span><span class="unit"> W</span>
+</div>
+<div class="range">From ThingSpeak Field 3</div>
+</div>
 
-    <div class="label" id="time">
-      Last update: --
-    </div>
+<div class="card">
+<div class="label">Power factor</div>
+<div class="val" id="valPF">
+<span id="pf">--</span>
+</div>
+<div class="range">Normal 0.85 to 0.99</div>
+</div>
 
-    <div class="connection">
-      <span class="dot" id="dot"></span>
-      <span id="connection">Connecting...</span>
-    </div>
+<div class="card">
+<div class="label">Energy</div>
+<div class="val" id="valE">
+<span id="e">--</span><span class="unit"> kWh</span>
+</div>
+<div class="range">From ThingSpeak Field 5</div>
+</div>
 
-  </div>
-
-
-  <!-- LIVE SENSOR VALUES -->
-
-  <div class="grid">
-
-    <div class="card">
-      <div class="label">Voltage</div>
-      <div class="val" id="valV">
-        <span id="v">--</span>
-        <span class="unit">V</span>
-      </div>
-      <div class="range">Normal: 216–230 V</div>
-    </div>
-
-    <div class="card">
-      <div class="label">Current</div>
-      <div class="val" id="valI">
-        <span id="i">--</span>
-        <span class="unit">A</span>
-      </div>
-      <div class="range">Normal: 9.8–10.2 A</div>
-    </div>
-
-    <div class="card">
-      <div class="label">Power</div>
-      <div class="val" id="valP">
-        <span id="p">--</span>
-        <span class="unit">W</span>
-      </div>
-      <div class="range">Active power</div>
-    </div>
-
-    <div class="card">
-      <div class="label">Power Factor</div>
-      <div class="val" id="valPF">
-        <span id="pf">--</span>
-      </div>
-      <div class="range">Minimum: 0.85</div>
-    </div>
-
-    <div class="card">
-      <div class="label">Energy</div>
-      <div class="val" id="valE">
-        <span id="e">--</span>
-        <span class="unit">kWh</span>
-      </div>
-      <div class="range">Energy consumption</div>
-    </div>
-
-    <div class="card">
-      <div class="label">Frequency</div>
-      <div class="val" id="valF">
-        <span id="f">--</span>
-        <span class="unit">Hz</span>
-      </div>
-      <div class="range">Normal: 49.5–50.5 Hz</div>
-    </div>
-
-  </div>
-
-
-  <!-- VOLTAGE GRAPH -->
-
-  <div class="card">
-
-    <div class="label">
-      Voltage History
-    </div>
-
-    <svg id="chart" viewBox="0 0 300 110"
-         preserveAspectRatio="none">
-    </svg>
-
-    <div class="range">
-      Red dashed lines = voltage limits
-    </div>
-
-  </div>
-
-
-  <!-- CURRENT GRAPH -->
-
-  <div class="card">
-
-    <div class="label">
-      Current History
-    </div>
-
-    <svg id="currentChart" viewBox="0 0 300 110"
-         preserveAspectRatio="none">
-    </svg>
-
-  </div>
-
-
-  <!-- TEST BUTTONS -->
-
-  <div class="card">
-
-    <div class="label">
-      Test Fault Conditions (Display Only)
-    </div>
-
-    <div class="tests">
-
-      <button id="bN">Normal</button>
-      <button id="bH">High Voltage</button>
-      <button id="bL">Low Voltage</button>
-      <button id="bC">Over Current</button>
-      <button id="bI">Low Current</button>
-      <button id="bP">Low PF</button>
-      <button id="bF">Bad Frequency</button>
-      <button id="bLive" class="on">Live Data</button>
-
-    </div>
-
-    <div class="range" style="margin-top:10px">
-      Test buttons display simulated values only.
-      They do not change your Arduino or electrical supply.
-    </div>
-
-  </div>
-
-
-  <div class="footer">
-    POWER MONITORING SYSTEM | IoT PROJECT
-    <br>
-    Data source: ThingSpeak
-  </div>
+<div class="card">
+<div class="label">Frequency</div>
+<div class="val" id="valF">
+<span id="f">--</span><span class="unit"> Hz</span>
+</div>
+<div class="range">Normal 49.5 to 50.5 Hz</div>
+</div>
 
 </div>
 
+<div class="card">
+<div class="label">Voltage history (dashed lines = limits)</div>
+<svg id="chart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+</div>
+
+<div class="card">
+<div class="label">Test the states (display only)</div>
+<div class="tests">
+<button id="bN">Normal</button>
+<button id="bH">High voltage</button>
+<button id="bL">Low voltage</button>
+<button id="bC">Over current</button>
+<button id="bI">Low current</button>
+<button id="bP">Low PF</button>
+<button id="bF">Bad frequency</button>
+<button id="bLive" class="on">Live</button>
+</div>
+</div>
+
+</div>
 
 <script>
 
-// ==========================================
-// THINGSPEAK CONFIGURATION
-// ==========================================
-
+// THINGSPEAK CONNECTION
 var CHANNEL_ID = "3583963";
 
 var DB_URL =
-  "https://api.thingspeak.com/channels/" +
-  CHANNEL_ID +
-  "/feeds/last.json";
+"https://api.thingspeak.com/channels/" +
+CHANNEL_ID + "/feeds/last.json";
 
-var POLL_MS = 15000;
-
-
-// ==========================================
-// FAULT LIMITS
-// ==========================================
-
+// LIMITS
 var V_HIGH = 230;
 var V_LOW = 216;
-
 var I_HIGH = 10.2;
 var I_LOW = 9.8;
-
 var PF_MIN = 0.85;
-
 var F_MIN = 49.5;
 var F_MAX = 50.5;
 
-
-// ==========================================
-// VARIABLES
-// ==========================================
-
+var POLL_MS = 15000;
 var demo = null;
+var hist = [];
 
-var voltageHistory = [];
-var currentHistory = [];
-
-var lastEntryId = null;
-
-function $(id) {
-  return document.getElementById(id);
+function $(id){
+return document.getElementById(id);
 }
 
-function mark(id, bad) {
-  $(id).className = "val " + (bad ? "bad" : "ok");
+function mark(id,bad){
+$(id).className = "val " + (bad ? "bad" : "ok");
 }
 
-function setConnection(online, message) {
-
-  $("dot").className =
-    "dot " + (online ? "online" : "offline");
-
-  $("connection").textContent = message;
-
+function r2(x){
+return Math.round(x*100);
 }
 
+// VOLTAGE GRAPH
+function draw(){
 
-// ==========================================
-// DRAW VOLTAGE GRAPH
-// ==========================================
+var svg = $("chart");
 
-function drawVoltage() {
-
-  var svg = $("chart");
-
-  if (voltageHistory.length < 2) {
-    svg.innerHTML = "";
-    return;
-  }
-
-  var min = Math.min(
-    V_LOW - 10,
-    Math.min.apply(null, voltageHistory)
-  );
-
-  var max = Math.max(
-    V_HIGH + 10,
-    Math.max.apply(null, voltageHistory)
-  );
-
-  function y(v) {
-    return 104 - ((v - min) / (max - min)) * 100;
-  }
-
-  var pts = voltageHistory.map(function(v, i) {
-    return (
-      i / (voltageHistory.length - 1) * 300
-    ) + "," + y(v);
-  }).join(" ");
-
-  svg.innerHTML =
-
-    '<line x1="0" x2="300" y1="' +
-    y(V_HIGH) + '" y2="' + y(V_HIGH) +
-    '" stroke="#d93025" stroke-dasharray="4"/>' +
-
-    '<line x1="0" x2="300" y1="' +
-    y(V_LOW) + '" y2="' + y(V_LOW) +
-    '" stroke="#d93025" stroke-dasharray="4"/>' +
-
-    '<polyline points="' + pts +
-    '" fill="none" stroke="#2f6fed" stroke-width="2"/>';
-
+if(hist.length < 2){
+svg.innerHTML = "";
+return;
 }
 
+var min = Math.min(V_LOW-10,Math.min.apply(null,hist));
+var max = Math.max(V_HIGH+10,Math.max.apply(null,hist));
 
-// ==========================================
-// DRAW CURRENT GRAPH
-// ==========================================
-
-function drawCurrent() {
-
-  var svg = $("currentChart");
-
-  if (currentHistory.length < 2) {
-    svg.innerHTML = "";
-    return;
-  }
-
-  var min = 0;
-
-  var max = Math.max(
-    I_HIGH + 2,
-    Math.max.apply(null, currentHistory)
-  );
-
-  function y(v) {
-    return 104 - ((v - min) / (max - min)) * 100;
-  }
-
-  var pts = currentHistory.map(function(v, i) {
-    return (
-      i / (currentHistory.length - 1) * 300
-    ) + "," + y(v);
-  }).join(" ");
-
-  svg.innerHTML =
-
-    '<line x1="0" x2="300" y1="' +
-    y(I_HIGH) + '" y2="' + y(I_HIGH) +
-    '" stroke="#d93025" stroke-dasharray="4"/>' +
-
-    '<polyline points="' + pts +
-    '" fill="none" stroke="#1b9e5a" stroke-width="2"/>';
-
+function y(v){
+return 88-((v-min)/(max-min))*84;
 }
 
+var pts = hist.map(function(v,i){
+return (i/(hist.length-1)*300)+","+y(v);
+}).join(" ");
 
-// ==========================================
-// RENDER REAL OR TEST DATA
-// ==========================================
+svg.innerHTML =
+'<line x1="0" x2="300" y1="'+y(V_HIGH)+'" y2="'+y(V_HIGH)+'" stroke="#d93025" stroke-dasharray="4"/>'+
+'<line x1="0" x2="300" y1="'+y(V_LOW)+'" y2="'+y(V_LOW)+'" stroke="#d93025" stroke-dasharray="4"/>'+
+'<polyline points="'+pts+'" fill="none" stroke="#2f6fed" stroke-width="2"/>';
+}
 
-function render(d, label) {
+// DISPLAY DATA
+function render(d,label){
 
-  // CORRECT FIELD MAPPING
+// CORRECT THINGSPEAK FIELD MAPPING
+var v = Number(d.field1);
+var i = Number(d.field2);
 
-  var i = Number(d.field1); // Current
-  var alertCode = Number(d.field2); // Alert
-  var v = Number(d.field3); // Voltage
-  var f = Number(d.field4); // Frequency
-  var p = Number(d.field5); // Power
-  var pf = Number(d.field6); // Power Factor
-  var e = Number(d.field7); // Energy
+var p = Number(d.field3);
+var pf = Number(d.field4);
+var e = Number(d.field5);
+var f = Number(d.field6);
 
-  // Validate sensor data
+var hasV = d.field1 !== null && d.field1 !== "";
+var hasI = d.field2 !== null && d.field2 !== "";
 
-  if (
-    ![i, v, f, p, pf, e].every(Number.isFinite)
-  ) {
-    $("status").textContent = "Invalid sensor data";
-    $("status").className = "status bad";
-    return;
-  }
+if(!hasV || !hasI || !Number.isFinite(v) || !Number.isFinite(i)){
+$("status").textContent = "Invalid sensor data";
+return;
+}
 
-  // FAULT DETECTION
+var hasP = d.field3 !== null && d.field3 !== "" && Number.isFinite(p);
+var hasPF = d.field4 !== null && d.field4 !== "" && Number.isFinite(pf);
+var hasE = d.field5 !== null && d.field5 !== "" && Number.isFinite(e);
+var hasF = d.field6 !== null && d.field6 !== "" && Number.isFinite(f);
 
-  var over = i > I_HIGH;
+var over = r2(i) > r2(I_HIGH);
+var lowI = r2(i) < r2(I_LOW);
+var high = v > V_HIGH;
+var low = v < V_LOW;
 
-  var lowI =
-    i > 0 && i < I_LOW;
+var pfLow = hasPF && hasP && p > 20 && pf < PF_MIN;
+var fBad = hasF && (f < F_MIN || f > F_MAX);
 
-  var high = v > V_HIGH;
+var alert = over || high || low || lowI;
 
-  var low = v < V_LOW;
+// VALUES
+$("v").textContent = v.toFixed(1);
+$("i").textContent = i.toFixed(2);
 
-  var pfLow =
-    p > 20 && pf < PF_MIN;
+$("p").textContent = hasP ? p.toFixed(1) : "--";
+$("pf").textContent = hasPF ? pf.toFixed(2) : "--";
+$("e").textContent = hasE ? e.toFixed(3) : "--";
+$("f").textContent = hasF ? f.toFixed(1) : "--";
 
-  var fBad =
-    f < F_MIN || f > F_MAX;
+// COLOURS
+mark("valV",high || low);
+mark("valI",over || lowI);
+mark("valP",false);
+mark("valPF",pfLow);
+mark("valE",false);
+mark("valF",fBad);
 
-  var alert =
-    over || high || low || lowI || pfLow || fBad;
+// STATUS
+var s = $("status");
 
-  // DISPLAY VALUES
+s.textContent =
+over ? "ALERT: Over current" :
+high ? "ALERT: High voltage" :
+low ? "ALERT: Low voltage" :
+lowI ? "ALERT: Low current" :
+"Normal";
 
-  $("v").textContent = v.toFixed(1);
-  $("i").textContent = i.toFixed(2);
-  $("p").textContent = p.toFixed(1);
-  $("pf").textContent = pf.toFixed(2);
-  $("e").textContent = e.toFixed(3);
-  $("f").textContent = f.toFixed(1);
+s.className = "status " + (alert ? "bad" : "ok");
 
-  // VALUE COLOURS
+$("statusCard").className =
+"card" + (alert ? " alert" : "");
 
-  mark("valV", high || low);
-  mark("valI", over || lowI);
-  mark("valP", false);
-  mark("valPF", pfLow);
-  mark("valE", false);
-  mark("valF", fBad);
+// ADDITIONAL ALERTS
+var notes = [];
 
-  // SYSTEM STATUS
+if(pfLow) notes.push("Low power factor");
+if(fBad) notes.push("Frequency out of range");
 
-  var s = $("status");
+$("note").textContent =
+notes.length ? "Check: "+notes.join(", ") : "";
 
-  s.textContent =
+// TIME
+if(label){
+$("time").textContent = label;
+}
+else{
+var when = new Date(d.created_at);
 
-    over ? "ALERT: OVER CURRENT" :
+$("time").textContent =
+"Updated: " + when.toLocaleTimeString();
+}
 
-    high ? "ALERT: HIGH VOLTAGE" :
+// GRAPH
+hist.push(v);
 
-    low ? "ALERT: LOW VOLTAGE" :
+if(hist.length > 40){
+hist.shift();
+}
 
-    lowI ? "ALERT: LOW CURRENT" :
-
-    pfLow ? "WARNING: LOW POWER FACTOR" :
-
-    fBad ? "WARNING: BAD FREQUENCY" :
-
-    "NORMAL";
-
-  s.className =
-    "status " + (alert ? "bad" : "ok");
-
-  $("statusCard").className =
-    "card" + (alert ? " alert" : "");
-
-  // DISPLAY ALERT FIELD
-
-  var notes = [];
-
-  if (Number.isFinite(alertCode) && alertCode !== 0) {
-    notes.push("Arduino alert value: " + alertCode);
-  }
-
-  $("note").textContent =
-    notes.length ? notes.join(" | ") : "No reported ThingSpeak alert";
-
-  // TIMESTAMP
-
-  if (label) {
-
-    $("time").textContent = label;
-
-  } else {
-
-    var when = new Date(d.created_at);
-
-    var validTime =
-      Number.isFinite(when.getTime());
-
-    var old =
-      !validTime ||
-      (Date.now() - when.getTime()) > 120000;
-
-    $("time").textContent =
-
-      validTime
-      ? "Last update: " + when.toLocaleString() +
-        (old ? " (STALE DATA)" : "")
-      : "Timestamp unavailable";
-
-  }
-
-  // SAVE HISTORY
-
-  voltageHistory.push(v);
-  currentHistory.push(i);
-
-  if (voltageHistory.length > 40) {
-    voltageHistory.shift();
-  }
-
-  if (currentHistory.length > 40) {
-    currentHistory.shift();
-  }
-
-  drawVoltage();
-  drawCurrent();
+draw();
 
 }
 
+// LIVE DATA
+function update(){
 
-// ==========================================
-// FETCH LIVE THINGSPEAK DATA
-// ==========================================
+if(demo) return;
 
-function update() {
+fetch(DB_URL + "?_=" + Date.now(), {
+cache:"no-store"
+})
+.then(function(r){
+if(!r.ok) throw new Error("Network error");
+return r.json();
+})
+.then(function(d){
 
-  if (demo !== null) return;
+if(demo) return;
 
-  fetch(DB_URL + "&_=" + Date.now(), {
-    cache: "no-store"
-  })
+if(d && d.field1 !== null && d.field2 !== null){
+render(d,null);
+}
+else{
+$("status").textContent = "No sensor data";
+}
 
-  .then(function(response) {
+})
+.catch(function(){
 
-    if (!response.ok) {
-      throw new Error("HTTP " + response.status);
-    }
+if(!demo){
+$("status").textContent = "Can't reach database";
+}
 
-    return response.json();
-
-  })
-
-  .then(function(d) {
-
-    if (demo !== null) return;
-
-    if (!d || !d.created_at || !d.entry_id) {
-      throw new Error("No ThingSpeak entries found");
-    }
-
-    if (d.entry_id === lastEntryId) {
-
-      setConnection(
-        true,
-        "Connected - waiting for next update"
-      );
-
-      return;
-    }
-
-    lastEntryId = d.entry_id;
-
-    render(d, null);
-
-    setConnection(
-      true,
-      "Connected to ThingSpeak"
-    );
-
-  })
-
-  .catch(function(error) {
-
-    if (demo !== null) return;
-
-    $("status").textContent =
-      "CONNECTION ERROR";
-
-    $("status").className =
-      "status bad";
-
-    $("note").textContent =
-      error.message;
-
-    setConnection(
-      false,
-      "Unable to receive ThingSpeak data"
-    );
-
-  });
+});
 
 }
 
-
-// ==========================================
 // TEST DATA
-// ==========================================
-
-// These values are only for display testing.
-
 var NORMAL = {
-
-  field1: 10.0,  // Current
-  field2: 0,     // Alert
-  field3: 230,   // Voltage
-  field4: 50.0,  // Frequency
-  field5: 2185,  // Power
-  field6: 0.95,  // Power factor
-  field7: 3.2    // Energy
-
+field1:230,
+field2:10.0,
+field3:2185,
+field4:0.95,
+field5:3.2,
+field6:50.0
 };
 
+function mix(o){
 
-function mix(o) {
+var r = {};
 
-  var r = {};
+for(var k in NORMAL) r[k] = NORMAL[k];
+for(var k2 in o) r[k2] = o[k2];
 
-  for (var k in NORMAL) {
-    r[k] = NORMAL[k];
-  }
-
-  for (var k2 in o) {
-    r[k2] = o[k2];
-  }
-
-  return r;
-
+return r;
 }
 
+// TEST BUTTONS
+function setDemo(reading,name,btn){
 
-// ==========================================
-// DEMO MODE
-// ==========================================
+[
+"bN","bH","bL","bC",
+"bI","bP","bF","bLive"
+].forEach(function(id){
+$(id).className = "";
+});
 
-function setDemo(reading, name, btn) {
+$(btn).className = "on";
 
-  [
-    "bN", "bH", "bL", "bC",
-    "bI", "bP", "bF", "bLive"
-  ].forEach(function(id) {
-    $(id).className = "";
-  });
+if(reading === null){
 
-  $(btn).className = "on";
-
-  if (reading === null) {
-
-    demo = null;
-
-    voltageHistory = [];
-    currentHistory = [];
-
-    $("status").textContent =
-      "Waiting for live data...";
-
-    $("note").textContent =
-      "Connecting to ThingSpeak...";
-
-    update();
-
-    return;
-  }
-
-  demo = reading;
-
-  voltageHistory = [];
-  currentHistory = [];
-
-  for (var k = 0; k < 8; k++) {
-
-    render(
-      demo,
-      "TEST: " + name + " (NOT REAL DATA)"
-    );
-
-  }
-
-  setConnection(
-    false,
-    "Display test mode - not live"
-  );
-
-}
-
-
-// ==========================================
-// TEST BUTTON EVENTS
-// ==========================================
-
-$("bN").onclick = function() {
-
-  setDemo(
-    mix({}),
-    "Normal",
-    "bN"
-  );
-
-};
-
-$("bH").onclick = function() {
-
-  setDemo(
-    mix({field3: 240}),
-    "High voltage",
-    "bH"
-  );
-
-};
-
-$("bL").onclick = function() {
-
-  setDemo(
-    mix({field3: 210}),
-    "Low voltage",
-    "bL"
-  );
-
-};
-
-$("bC").onclick = function() {
-
-  setDemo(
-    mix({
-      field1: 11.0,
-      field5: 2400
-    }),
-    "Over current",
-    "bC"
-  );
-
-};
-
-$("bI").onclick = function() {
-
-  setDemo(
-    mix({
-      field1: 8.0,
-      field5: 1750
-    }),
-    "Low current",
-    "bI"
-  );
-
-};
-
-$("bP").onclick = function() {
-
-  setDemo(
-    mix({
-      field6: 0.6,
-      field5: 1380
-    }),
-    "Low power factor",
-    "bP"
-  );
-
-};
-
-$("bF").onclick = function() {
-
-  setDemo(
-    mix({field4: 48.9}),
-    "Bad frequency",
-    "bF"
-  );
-
-};
-
-$("bLive").onclick = function() {
-
-  setDemo(
-    null,
-    "",
-    "bLive"
-  );
-
-};
-
-
-// ==========================================
-// START LIVE MONITORING
-// ==========================================
-
+demo = null;
+hist = [];
 update();
+return;
 
-setInterval(update, POLL_MS);
+}
+
+demo = reading;
+hist = [];
+
+for(var k=0;k<8;k++){
+render(demo,"TEST: "+name+" (not real data)");
+}
+
+}
+
+$("bN").onclick = function(){
+setDemo(mix({}),"Normal","bN");
+};
+
+$("bH").onclick = function(){
+setDemo(mix({field1:240}),"High voltage","bH");
+};
+
+$("bL").onclick = function(){
+setDemo(mix({field1:210}),"Low voltage","bL");
+};
+
+$("bC").onclick = function(){
+setDemo(mix({field2:11.0}),"Over current","bC");
+};
+
+$("bI").onclick = function(){
+setDemo(mix({field2:8.0}),"Low current","bI");
+};
+
+$("bP").onclick = function(){
+setDemo(mix({field4:0.6,field3:1380}),"Low power factor","bP");
+};
+
+$("bF").onclick = function(){
+setDemo(mix({field6:48.9}),"Bad frequency","bF");
+};
+
+$("bLive").onclick = function(){
+setDemo(null,"","bLive");
+};
+
+// START
+update();
+setInterval(update,POLL_MS);
 
 </script>
-
 </body>
 </html>
