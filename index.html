@@ -1,181 +1,510 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Power Monitor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Monitor Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-:root{--bg:#f4f6f8;--card:#fff;--text:#1a2330;--muted:#6b7785;--ok:#1b9e5a;--bad:#d93025}
-@media (prefers-color-scheme:dark){:root{--bg:#0f141a;--card:#1a212b;--text:#e8edf3;--muted:#8d99a8;--ok:#3ddc84;--bad:#ff6b5e}}
-*{box-sizing:border-box}
-body{margin:0;padding:16px;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif}
-.wrap{max-width:520px;margin:0 auto}
-h1{font-size:20px;margin:4px 0 16px}
-.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px}
-.label{color:var(--muted);font-size:13px}
-.range{color:var(--muted);font-size:12px;margin-top:2px}
-.status{font-size:22px;font-weight:700}
-.ok{color:var(--ok)}.bad{color:var(--bad)}
-.card.alert{outline:3px solid var(--bad)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.grid .card{margin:0}
-.val{font-size:30px;font-weight:700;margin-top:4px}
-.unit{font-size:15px;font-weight:400;color:var(--muted)}
-svg{width:100%;height:90px;display:block}
-.tests{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.tests button{flex:1;min-width:110px;padding:10px;font-size:14px;border:1px solid var(--muted);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer}
-.tests button.on{background:var(--text);color:var(--bg)}
+:root {
+  --bg:#f3f6fa;
+  --card:#ffffff;
+  --text:#1a2330;
+  --muted:#718096;
+  --primary:#2563eb;
+  --green:#159957;
+  --red:#dc3545;
+  --orange:#ed8b22;
+}
+
+* {
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body {
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+header {
+  background:#0c0521;
+  color:white;
+  padding:22px 5%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+header h1 {
+  font-size:23px;
+}
+
+header p {
+  color:#c7c6d4;
+  margin-top:6px;
+  font-size:13px;
+}
+
+.container {
+  max-width:1200px;
+  margin:auto;
+  padding:25px 18px;
+}
+
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-bottom:20px;
+  align-items:center;
+}
+
+.status {
+  padding:9px 16px;
+  border-radius:20px;
+  background:#e5f7ed;
+  color:var(--green);
+  font-weight:bold;
+  font-size:13px;
+}
+
+.status.fault {
+  background:#ffe5e5;
+  color:var(--red);
+}
+
+.status.wait {
+  background:#fff2d9;
+  color:#a36b00;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:18px;
+}
+
+.card {
+  background:var(--card);
+  border-radius:14px;
+  padding:22px;
+  box-shadow:0 3px 15px rgba(0,0,0,.05);
+}
+
+.card .label {
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:14px;
+}
+
+.value {
+  font-size:29px;
+  font-weight:bold;
+}
+
+.unit {
+  font-size:14px;
+  color:var(--muted);
+}
+
+.icon {
+  font-size:23px;
+  margin-bottom:14px;
+}
+
+.section-title {
+  margin:28px 0 15px;
+  font-size:19px;
+}
+
+.chart-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:18px;
+}
+
+.chart-card {
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  min-width:0;
+  height:300px;
+}
+
+.chart-card canvas {
+  max-height:230px;
+}
+
+.info {
+  margin-top:20px;
+  background:white;
+  padding:20px;
+  border-radius:14px;
+}
+
+.info p {
+  margin:10px 0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+button {
+  border:none;
+  background:var(--primary);
+  color:white;
+  padding:10px 17px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+button:hover {
+  opacity:.85;
+}
+
+footer {
+  text-align:center;
+  color:var(--muted);
+  padding:25px;
+  font-size:13px;
+}
+
+@media(max-width:500px) {
+  header h1 {font-size:19px;}
+  .value {font-size:25px;}
+  .container {padding:18px 12px;}
+}
 </style>
 </head>
+
 <body>
-<div class="wrap">
-  <h1>Power Monitor</h1>
-  <div class="card" id="statusCard">
-    <div class="label">Supply status</div>
-    <div class="status ok" id="status">Waiting for data…</div>
-    <div class="label" id="note"></div>
-    <div class="label" id="time">--</div>
+
+<header>
+  <div>
+    <h1>⚡ POWER MONITOR</h1>
+    <p>Smart Electrical Monitoring Dashboard</p>
   </div>
-  <div class="grid">
-    <div class="card"><div class="label">Voltage</div><div class="val" id="valV"><span id="v">--</span><span class="unit"> V</span></div><div class="range">Normal 216 to 230 V</div></div>
-    <div class="card"><div class="label">Current</div><div class="val" id="valI"><span id="i">--</span><span class="unit"> A</span></div><div class="range">Normal 9.8 to 10.2 A</div></div>
-    <div class="card"><div class="label">Power</div><div class="val" id="valP"><span id="p">--</span><span class="unit"> W</span></div><div class="range">Home: 300 to 3000 W</div></div>
-    <div class="card"><div class="label">Power factor</div><div class="val" id="valPF"><span id="pf">--</span></div><div class="range">Normal 0.85 to 0.99</div></div>
-    <div class="card"><div class="label">Energy</div><div class="val" id="valE"><span id="e">--</span><span class="unit"> kWh</span></div><div class="range">Home: 3 to 8 kWh a day</div></div>
-    <div class="card"><div class="label">Frequency</div><div class="val" id="valF"><span id="f">--</span><span class="unit"> Hz</span></div><div class="range">Normal 49.5 to 50.5 Hz</div></div>
-  </div>
-  <div class="card">
-    <div class="label">Voltage history (dashed lines = limits)</div>
-    <svg id="chart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
-  </div>
-  <div class="card">
-    <div class="label">Test the states (display only)</div>
-    <div class="tests">
-      <button id="bN">Normal</button>
-      <button id="bH">High voltage</button>
-      <button id="bL">Low voltage</button>
-      <button id="bC">Over current</button>
-      <button id="bI">Low current</button>
-      <button id="bP">Low PF</button>
-      <button id="bF">Bad frequency</button>
-      <button id="bLive" class="on">Live</button>
+  <div>Arduino UNO + GSM + ThingSpeak</div>
+</header>
+
+<div class="container">
+
+  <div class="topbar">
+    <div>
+      <h2>Live Dashboard</h2>
+      <p style="color:#718096;margin-top:6px;font-size:13px">
+        Last update: <span id="lastUpdate">Waiting...</span>
+      </p>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="status wait" id="connection">CONNECTING</span>
+      <button onclick="getData()">Refresh</button>
     </div>
   </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="icon">⚡</div>
+      <div class="label">Voltage</div>
+      <div class="value"><span id="voltage">--</span> <span class="unit">V</span></div>
+    </div>
+
+    <div class="card">
+      <div class="icon">🔌</div>
+      <div class="label">Current</div>
+      <div class="value"><span id="current">--</span> <span class="unit">A</span></div>
+    </div>
+
+    <div class="card">
+      <div class="icon">💡</div>
+      <div class="label">Power</div>
+      <div class="value"><span id="power">--</span> <span class="unit">W</span></div>
+    </div>
+
+    <div class="card">
+      <div class="icon">📈</div>
+      <div class="label">Power Factor</div>
+      <div class="value" id="pf">--</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">🔄</div>
+      <div class="label">Frequency</div>
+      <div class="value"><span id="frequency">--</span> <span class="unit">Hz</span></div>
+    </div>
+
+    <div class="card">
+      <div class="icon">🔋</div>
+      <div class="label">Energy</div>
+      <div class="value"><span id="energy">--</span> <span class="unit">kWh</span></div>
+    </div>
+
+  </div>
+
+  <h3 class="section-title">System Status</h3>
+
+  <div class="card">
+    <div class="label">Current operating condition</div>
+    <div class="value" id="faultStatus" style="font-size:22px">
+      WAITING FOR DATA
+    </div>
+    <p style="color:#718096;margin-top:10px;font-size:13px" id="faultDescription">
+      Waiting for ThingSpeak readings.
+    </p>
+  </div>
+
+  <h3 class="section-title">Live Monitoring Graphs</h3>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Voltage (V)</h3>
+      <canvas id="voltageChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Current (A)</h3>
+      <canvas id="currentChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Power (W)</h3>
+      <canvas id="powerChart"></canvas>
+    </div>
+  </div>
+
+  <div class="info">
+    <h3>Connection Information</h3>
+    <p>Device: Arduino UNO R3</p>
+    <p>Cloud: ThingSpeak</p>
+    <p>Channel ID: <span id="channelDisplay"></span></p>
+    <p>Refresh interval: 20 seconds</p>
+    <p>Connection: <span id="connectionText">Waiting...</span></p>
+  </div>
+
 </div>
+
+<footer>
+  Power Monitor | Smart Electrical Monitoring System
+</footer>
+
 <script>
-var CHANNEL_ID = "3583963";
-var DB_URL = "https://api.thingspeak.com/channels/" + CHANNEL_ID + "/feeds/last.json";
 
-var V_HIGH = 230;
-var V_LOW = 216;
-var I_HIGH = 10.2;
-var I_LOW = 9.8;
-var PF_MIN = 0.85;
-var F_MIN = 49.5, F_MAX = 50.5;
+// ---------- THINGSPEAK SETTINGS ----------
 
-var POLL_MS = 15000;
-var demo = null;
-var hist = [];
+const CHANNEL_ID = "3583963";
 
-function $(id) { return document.getElementById(id); }
-function mark(id, bad) { $(id).className = "val " + (bad ? "bad" : "ok"); }
-function r2(x) { return Math.round(x * 100); }
+// Enter your ThingSpeak READ API KEY here.
+// Leave empty if your channel is public.
+const READ_API_KEY = "59NC1UL7HORGFEZ6
+";
 
-function draw() {
-  var svg = $("chart");
-  if (hist.length < 2) { svg.innerHTML = ""; return; }
-  var min = Math.min(V_LOW - 10, Math.min.apply(null, hist));
-  var max = Math.max(V_HIGH + 10, Math.max.apply(null, hist));
-  function y(v) { return 88 - ((v - min) / (max - min)) * 84; }
-  var pts = hist.map(function (v, i) {
-    return (i / (hist.length - 1) * 300) + "," + y(v);
-  }).join(" ");
-  svg.innerHTML =
-    '<line x1="0" x2="300" y1="' + y(V_HIGH) + '" y2="' + y(V_HIGH) + '" stroke="#d93025" stroke-dasharray="4" stroke-width="1"/>' +
-    '<line x1="0" x2="300" y1="' + y(V_LOW) + '" y2="' + y(V_LOW) + '" stroke="#d93025" stroke-dasharray="4" stroke-width="1"/>' +
-    '<polyline points="' + pts + '" fill="none" stroke="#2f6fed" stroke-width="2"/>';
-}
+const API_URL =
+  https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json? +
+  (READ_API_KEY ? api_key=${READ_API_KEY}& : "") +
+  "results=15";
 
-function render(d, label) {
-  var i = Number(d.field1), v = Number(d.field3), p = Number(d.field4);
-  var pf = Number(d.field5), e = Number(d.field6), f = Number(d.field7);
-  var vi = Math.round(v);
-  var over = r2(i) > r2(I_HIGH);
-  var lowI = r2(i) < r2(I_LOW);
-  var high = vi > V_HIGH;
-  var low = vi < V_LOW;
-  var pfLow = p > 20 && pf < PF_MIN;
-  var fBad = v > 50 && (f < F_MIN || f > F_MAX);
-  var alert = over || high || low || lowI;
+// ---------- HTML ELEMENTS ----------
 
-  $("v").textContent = v.toFixed(1);
-  $("i").textContent = i.toFixed(2);
-  $("p").textContent = p.toFixed(1);
-  $("pf").textContent = pf.toFixed(2);
-  $("e").textContent = e.toFixed(3);
-  $("f").textContent = f.toFixed(1);
+const $ = id => document.getElementById(id);
 
-  mark("valV", high || low);
-  mark("valI", over || lowI);
-  mark("valP", false);
-  mark("valPF", pfLow);
-  mark("valE", false);
-  mark("valF", fBad);
+$("channelDisplay").textContent = CHANNEL_ID;
 
-  var s = $("status");
-  s.textContent = over ? "ALERT: Over current" : (high ? "ALERT: High voltage" : (low ? "ALERT: Low voltage" : (lowI ? "ALERT: Low current" : "Normal")));
-  s.className = "status " + (alert ? "bad" : "ok");
-  $("statusCard").className = "card" + (alert ? " alert" : "");
+// ---------- CHART SETTINGS ----------
 
-  var notes = [];
-  if (pfLow) notes.push("low power factor");
-  if (fBad) notes.push("frequency out of range");
-  $("note").textContent = notes.length ? "Check: " + notes.join(", ") : "";
-
-  if (label) {
-    $("time").textContent = label;
-  } else {
-    var when = new Date(d.created_at);
-    var old = (Date.now() - when.getTime()) > 120000;
-    $("time").textContent = "Updated: " + when.toLocaleTimeString() + (old ? " (no recent data)" : "");
-  }
-  hist.push(v);
-  if (hist.length > 40) hist.shift();
-  draw();
-}
-
-function update() {
-  if (demo) return;
-  fetch(DB_URL).then(function (r) { return r.json(); }).then(function (d) {
-    if (d && !demo) render(d, null);
-  }).catch(function () {
-    if (!demo) $("status").textContent = "Can’t reach database";
+function createChart(id,label) {
+  return new Chart($(id), {
+    type:"line",
+    data:{
+      labels:[],
+      datasets:[{
+        label:label,
+        data:[],
+        borderColor:"#2563eb",
+        backgroundColor:"rgba(37,99,235,.10)",
+        fill:true,
+        tension:.35
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:false,
+      scales:{
+        y:{beginAtZero:true}
+      }
+    }
   });
 }
 
-var NORMAL = {field1: 10.0, field3: 230, field4: 2185, field5: 0.95, field6: 3.2, field7: 50.0};
-function mix(o) { var r = {}; for (var k in NORMAL) r[k] = NORMAL[k]; for (var k2 in o) r[k2] = o[k2]; return r; }
+const voltageChart = createChart("voltageChart","Voltage");
+const currentChart = createChart("currentChart","Current");
+const powerChart = createChart("powerChart","Power");
 
-function setDemo(reading, name, btn) {
-  ["bN", "bH", "bL", "bC", "bI", "bP", "bF", "bLive"].forEach(function (id) { $(id).className = ""; });
-  $(btn).className = "on";
-  if (reading === null) { demo = null; hist = []; update(); return; }
-  demo = reading;
-  hist = [];
-  for (var k = 0; k < 8; k++) render(demo, "TEST: " + name + " (not real data)");
+// ---------- UPDATE CHART ----------
+
+function updateChart(chart,labels,values) {
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = values;
+  chart.update("none");
 }
 
-$("bN").onclick = function () { setDemo(mix({}), "Normal", "bN"); };
-$("bH").onclick = function () { setDemo(mix({field3: 240}), "High voltage", "bH"); };
-$("bL").onclick = function () { setDemo(mix({field3: 210}), "Low voltage", "bL"); };
-$("bC").onclick = function () { setDemo(mix({field1: 11.0, field4: 2400}), "Over current", "bC"); };
-$("bI").onclick = function () { setDemo(mix({field1: 8.0, field4: 1750}), "Low current", "bI"); };
-$("bP").onclick = function () { setDemo(mix({field5: 0.6, field4: 1380}), "Low power factor", "bP"); };
-$("bF").onclick = function () { setDemo(mix({field7: 48.9}), "Bad frequency", "bF"); };
-$("bLive").onclick = function () { setDemo(null, "", "bLive"); };
+// ---------- FAULT STATUS ----------
 
-update();
-setInterval(update, POLL_MS);
+function showStatus(state) {
+
+  const status = $("faultStatus");
+  const badge = $("connection");
+
+  const names = {
+    0:"NORMAL",
+    1:"HIGH VOLTAGE",
+    2:"LOW VOLTAGE",
+    3:"OVER CURRENT",
+    4:"LOW CURRENT"
+  };
+
+  const descriptions = {
+    0:"System operating normally.",
+    1:"High voltage condition detected.",
+    2:"Low voltage condition detected.",
+    3:"Overcurrent condition detected.",
+    4:"Low current condition detected."
+  };
+
+  const name = names[state] ?? "UNKNOWN STATUS";
+
+  status.textContent = name;
+  $("faultDescription").textContent =
+    descriptions[state] ?? "Unknown fault state.";
+
+  const isFault = state !== 0;
+
+  badge.textContent = isFault ? "FAULT DETECTED" : "CONNECTED";
+  badge.className = isFault ? "status fault" : "status";
+}
+
+// ---------- GET THINGSPEAK DATA ----------
+
+async function getData() {
+
+  $("connection").textContent = "CONNECTING";
+  $("connection").className = "status wait";
+
+  try {
+
+    const response = await fetch(API_URL);
+
+    if (!response.ok) {
+      throw new Error("HTTP error " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (!data.feeds || data.feeds.length === 0) {
+      throw new Error("No channel data found");
+    }
+
+    const feeds = data.feeds;
+    const latest = feeds[feeds.length - 1];
+
+    // Arduino mapping:
+    // Field 1 = Current
+    // Field 2 = State
+    // Field 3 = Voltage
+    // Field 4 = Power
+    // Field 5 = Power Factor
+    // Field 6 = Energy
+    // Field 7 = Frequency
+
+    const current = Number(latest.field1);
+    const state = Number(latest.field2);
+    const voltage = Number(latest.field3);
+    const power = Number(latest.field4);
+    const pf = Number(latest.field5);
+    const energy = Number(latest.field6);
+    const frequency = Number(latest.field7);
+
+    $("current").textContent =
+      Number.isFinite(current) ? current.toFixed(2) : "--";
+
+    $("voltage").textContent =
+      Number.isFinite(voltage) ? voltage.toFixed(1) : "--";
+
+    $("power").textContent =
+      Number.isFinite(power) ? power.toFixed(1) : "--";
+
+    $("pf").textContent =
+      Number.isFinite(pf) ? pf.toFixed(2) : "--";
+
+    $("energy").textContent =
+      Number.isFinite(energy) ? energy.toFixed(3) : "--";
+
+    $("frequency").textContent =
+      Number.isFinite(frequency) ? frequency.toFixed(1) : "--";
+
+    if (!Number.isFinite(state)) {
+      throw new Error("Fault state is missing");
+    }
+
+    showStatus(state);
+
+    const labels = feeds.map(feed =>
+      new Date(feed.created_at).toLocaleTimeString()
+    );
+
+    updateChart(
+      voltageChart,
+      labels,
+      feeds.map(f => f.field3 === null ? null : Number(f.field3))
+    );
+
+    updateChart(
+      currentChart,
+      labels,
+      feeds.map(f => f.field1 === null ? null : Number(f.field1))
+    );
+
+    updateChart(
+      powerChart,
+      labels,
+      feeds.map(f => f.field4 === null ? null : Number(f.field4))
+    );
+
+    $("lastUpdate").textContent =
+      new Date(latest.created_at).toLocaleString();
+
+    $("connectionText").textContent = "Connected successfully";
+
+  } catch(error) {
+
+    console.error(error);
+
+    $("connection").textContent = "CONNECTION ERROR";
+    $("connection").className = "status fault";
+
+    $("connectionText").textContent = error.message;
+
+    $("faultStatus").textContent = "DATA UNAVAILABLE";
+    $("faultDescription").textContent =
+      "Check your ThingSpeak channel and API settings.";
+  }
+}
+
+// ---------- AUTOMATIC UPDATE ----------
+
+getData();
+setInterval(getData,20000);
+
 </script>
+
 </body>
 </html>
