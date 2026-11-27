@@ -1,434 +1,181 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Power Monitor</title>
-
 <style>
-:root{
---bg:#f4f6f8;
---card:#fff;
---text:#1a2330;
---muted:#6b7785;
---ok:#1b9e5a;
---bad:#d93025;
-}
-@media(prefers-color-scheme:dark){
-:root{
---bg:#0f141a;
---card:#1a212b;
---text:#e8edf3;
---muted:#8d99a8;
---ok:#3ddc84;
---bad:#ff6b5e;
-}}
+:root{--bg:#f4f6f8;--card:#fff;--text:#1a2330;--muted:#6b7785;--ok:#1b9e5a;--bad:#d93025}
+@media (prefers-color-scheme:dark){:root{--bg:#0f141a;--card:#1a212b;--text:#e8edf3;--muted:#8d99a8;--ok:#3ddc84;--bad:#ff6b5e}}
 *{box-sizing:border-box}
-body{
-margin:0;padding:16px;
-background:var(--bg);
-color:var(--text);
-font-family:system-ui,sans-serif;
-}
+body{margin:0;padding:16px;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif}
 .wrap{max-width:520px;margin:0 auto}
 h1{font-size:20px;margin:4px 0 16px}
-.card{
-background:var(--card);
-border-radius:14px;
-padding:16px;
-margin-bottom:12px;
-}
+.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px}
 .label{color:var(--muted);font-size:13px}
 .range{color:var(--muted);font-size:12px;margin-top:2px}
 .status{font-size:22px;font-weight:700}
-.ok{color:var(--ok)}
-.bad{color:var(--bad)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
 .card.alert{outline:3px solid var(--bad)}
-.grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:12px;margin-bottom:12px;
-}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .grid .card{margin:0}
 .val{font-size:30px;font-weight:700;margin-top:4px}
 .unit{font-size:15px;font-weight:400;color:var(--muted)}
 svg{width:100%;height:90px;display:block}
 .tests{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.tests button{
-flex:1;min-width:110px;padding:10px;
-font-size:14px;border:1px solid var(--muted);
-border-radius:10px;background:var(--card);
-color:var(--text);cursor:pointer;
-}
+.tests button{flex:1;min-width:110px;padding:10px;font-size:14px;border:1px solid var(--muted);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer}
 .tests button.on{background:var(--text);color:var(--bg)}
 </style>
 </head>
-
 <body>
 <div class="wrap">
-
-<h1>Power Monitor</h1>
-
-<div class="card" id="statusCard">
-<div class="label">Supply status</div>
-<div class="status ok" id="status">Waiting for data...</div>
-<div class="label" id="note"></div>
-<div class="label" id="time">--</div>
+  <h1>Power Monitor</h1>
+  <div class="card" id="statusCard">
+    <div class="label">Supply status</div>
+    <div class="status ok" id="status">Waiting for data…</div>
+    <div class="label" id="note"></div>
+    <div class="label" id="time">--</div>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="label">Voltage</div><div class="val" id="valV"><span id="v">--</span><span class="unit"> V</span></div><div class="range">Normal 216 to 230 V</div></div>
+    <div class="card"><div class="label">Current</div><div class="val" id="valI"><span id="i">--</span><span class="unit"> A</span></div><div class="range">Normal 9.8 to 10.2 A</div></div>
+    <div class="card"><div class="label">Power</div><div class="val" id="valP"><span id="p">--</span><span class="unit"> W</span></div><div class="range">Home: 300 to 3000 W</div></div>
+    <div class="card"><div class="label">Power factor</div><div class="val" id="valPF"><span id="pf">--</span></div><div class="range">Normal 0.85 to 0.99</div></div>
+    <div class="card"><div class="label">Energy</div><div class="val" id="valE"><span id="e">--</span><span class="unit"> kWh</span></div><div class="range">Home: 3 to 8 kWh a day</div></div>
+    <div class="card"><div class="label">Frequency</div><div class="val" id="valF"><span id="f">--</span><span class="unit"> Hz</span></div><div class="range">Normal 49.5 to 50.5 Hz</div></div>
+  </div>
+  <div class="card">
+    <div class="label">Voltage history (dashed lines = limits)</div>
+    <svg id="chart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+  </div>
+  <div class="card">
+    <div class="label">Test the states (display only)</div>
+    <div class="tests">
+      <button id="bN">Normal</button>
+      <button id="bH">High voltage</button>
+      <button id="bL">Low voltage</button>
+      <button id="bC">Over current</button>
+      <button id="bI">Low current</button>
+      <button id="bP">Low PF</button>
+      <button id="bF">Bad frequency</button>
+      <button id="bLive" class="on">Live</button>
+    </div>
+  </div>
 </div>
-
-<div class="grid">
-
-<div class="card">
-<div class="label">Voltage</div>
-<div class="val" id="valV">
-<span id="v">--</span><span class="unit"> V</span>
-</div>
-<div class="range">Normal 216 to 230 V</div>
-</div>
-
-<div class="card">
-<div class="label">Current</div>
-<div class="val" id="valI">
-<span id="i">--</span><span class="unit"> A</span>
-</div>
-<div class="range">Normal 9.8 to 10.2 A (adjust to your load)</div>
-</div>
-
-<div class="card">
-<div class="label">Power</div>
-<div class="val" id="valP">
-<span id="p">--</span><span class="unit"> W</span>
-</div>
-<div class="range">From ThingSpeak Field 3</div>
-</div>
-
-<div class="card">
-<div class="label">Power factor</div>
-<div class="val" id="valPF">
-<span id="pf">--</span>
-</div>
-<div class="range">Normal 0.85 to 0.99</div>
-</div>
-
-<div class="card">
-<div class="label">Energy</div>
-<div class="val" id="valE">
-<span id="e">--</span><span class="unit"> kWh</span>
-</div>
-<div class="range">From ThingSpeak Field 5</div>
-</div>
-
-<div class="card">
-<div class="label">Frequency</div>
-<div class="val" id="valF">
-<span id="f">--</span><span class="unit"> Hz</span>
-</div>
-<div class="range">Normal 49.5 to 50.5 Hz</div>
-</div>
-
-</div>
-
-<div class="card">
-<div class="label">Voltage history (dashed lines = limits)</div>
-<svg id="chart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
-</div>
-
-<div class="card">
-<div class="label">Test the states (display only)</div>
-<div class="tests">
-<button id="bN">Normal</button>
-<button id="bH">High voltage</button>
-<button id="bL">Low voltage</button>
-<button id="bC">Over current</button>
-<button id="bI">Low current</button>
-<button id="bP">Low PF</button>
-<button id="bF">Bad frequency</button>
-<button id="bLive" class="on">Live</button>
-</div>
-</div>
-
-</div>
-
 <script>
-
-// THINGSPEAK CONNECTION
 var CHANNEL_ID = "3583963";
+var DB_URL = "https://api.thingspeak.com/channels/" + CHANNEL_ID + "/feeds/last.json";
 
-var DB_URL =
-"https://api.thingspeak.com/channels/" +
-CHANNEL_ID + "/feeds/last.json";
-
-// LIMITS
 var V_HIGH = 230;
 var V_LOW = 216;
 var I_HIGH = 10.2;
 var I_LOW = 9.8;
 var PF_MIN = 0.85;
-var F_MIN = 49.5;
-var F_MAX = 50.5;
+var F_MIN = 49.5, F_MAX = 50.5;
 
 var POLL_MS = 15000;
 var demo = null;
 var hist = [];
 
-function $(id){
-return document.getElementById(id);
+function $(id) { return document.getElementById(id); }
+function mark(id, bad) { $(id).className = "val " + (bad ? "bad" : "ok"); }
+function r2(x) { return Math.round(x * 100); }
+
+function draw() {
+  var svg = $("chart");
+  if (hist.length < 2) { svg.innerHTML = ""; return; }
+  var min = Math.min(V_LOW - 10, Math.min.apply(null, hist));
+  var max = Math.max(V_HIGH + 10, Math.max.apply(null, hist));
+  function y(v) { return 88 - ((v - min) / (max - min)) * 84; }
+  var pts = hist.map(function (v, i) {
+    return (i / (hist.length - 1) * 300) + "," + y(v);
+  }).join(" ");
+  svg.innerHTML =
+    '<line x1="0" x2="300" y1="' + y(V_HIGH) + '" y2="' + y(V_HIGH) + '" stroke="#d93025" stroke-dasharray="4" stroke-width="1"/>' +
+    '<line x1="0" x2="300" y1="' + y(V_LOW) + '" y2="' + y(V_LOW) + '" stroke="#d93025" stroke-dasharray="4" stroke-width="1"/>' +
+    '<polyline points="' + pts + '" fill="none" stroke="#2f6fed" stroke-width="2"/>';
 }
 
-function mark(id,bad){
-$(id).className = "val " + (bad ? "bad" : "ok");
+function render(d, label) {
+  var i = Number(d.field1), v = Number(d.field3), p = Number(d.field4);
+  var pf = Number(d.field5), e = Number(d.field6), f = Number(d.field7);
+  var vi = Math.round(v);
+  var over = r2(i) > r2(I_HIGH);
+  var lowI = r2(i) < r2(I_LOW);
+  var high = vi > V_HIGH;
+  var low = vi < V_LOW;
+  var pfLow = p > 20 && pf < PF_MIN;
+  var fBad = v > 50 && (f < F_MIN || f > F_MAX);
+  var alert = over || high || low || lowI;
+
+  $("v").textContent = v.toFixed(1);
+  $("i").textContent = i.toFixed(2);
+  $("p").textContent = p.toFixed(1);
+  $("pf").textContent = pf.toFixed(2);
+  $("e").textContent = e.toFixed(3);
+  $("f").textContent = f.toFixed(1);
+
+  mark("valV", high || low);
+  mark("valI", over || lowI);
+  mark("valP", false);
+  mark("valPF", pfLow);
+  mark("valE", false);
+  mark("valF", fBad);
+
+  var s = $("status");
+  s.textContent = over ? "ALERT: Over current" : (high ? "ALERT: High voltage" : (low ? "ALERT: Low voltage" : (lowI ? "ALERT: Low current" : "Normal")));
+  s.className = "status " + (alert ? "bad" : "ok");
+  $("statusCard").className = "card" + (alert ? " alert" : "");
+
+  var notes = [];
+  if (pfLow) notes.push("low power factor");
+  if (fBad) notes.push("frequency out of range");
+  $("note").textContent = notes.length ? "Check: " + notes.join(", ") : "";
+
+  if (label) {
+    $("time").textContent = label;
+  } else {
+    var when = new Date(d.created_at);
+    var old = (Date.now() - when.getTime()) > 120000;
+    $("time").textContent = "Updated: " + when.toLocaleTimeString() + (old ? " (no recent data)" : "");
+  }
+  hist.push(v);
+  if (hist.length > 40) hist.shift();
+  draw();
 }
 
-function r2(x){
-return Math.round(x*100);
+function update() {
+  if (demo) return;
+  fetch(DB_URL).then(function (r) { return r.json(); }).then(function (d) {
+    if (d && !demo) render(d, null);
+  }).catch(function () {
+    if (!demo) $("status").textContent = "Can’t reach database";
+  });
 }
 
-// VOLTAGE GRAPH
-function draw(){
+var NORMAL = {field1: 10.0, field3: 230, field4: 2185, field5: 0.95, field6: 3.2, field7: 50.0};
+function mix(o) { var r = {}; for (var k in NORMAL) r[k] = NORMAL[k]; for (var k2 in o) r[k2] = o[k2]; return r; }
 
-var svg = $("chart");
-
-if(hist.length < 2){
-svg.innerHTML = "";
-return;
+function setDemo(reading, name, btn) {
+  ["bN", "bH", "bL", "bC", "bI", "bP", "bF", "bLive"].forEach(function (id) { $(id).className = ""; });
+  $(btn).className = "on";
+  if (reading === null) { demo = null; hist = []; update(); return; }
+  demo = reading;
+  hist = [];
+  for (var k = 0; k < 8; k++) render(demo, "TEST: " + name + " (not real data)");
 }
 
-var min = Math.min(V_LOW-10,Math.min.apply(null,hist));
-var max = Math.max(V_HIGH+10,Math.max.apply(null,hist));
+$("bN").onclick = function () { setDemo(mix({}), "Normal", "bN"); };
+$("bH").onclick = function () { setDemo(mix({field3: 240}), "High voltage", "bH"); };
+$("bL").onclick = function () { setDemo(mix({field3: 210}), "Low voltage", "bL"); };
+$("bC").onclick = function () { setDemo(mix({field1: 11.0, field4: 2400}), "Over current", "bC"); };
+$("bI").onclick = function () { setDemo(mix({field1: 8.0, field4: 1750}), "Low current", "bI"); };
+$("bP").onclick = function () { setDemo(mix({field5: 0.6, field4: 1380}), "Low power factor", "bP"); };
+$("bF").onclick = function () { setDemo(mix({field7: 48.9}), "Bad frequency", "bF"); };
+$("bLive").onclick = function () { setDemo(null, "", "bLive"); };
 
-function y(v){
-return 88-((v-min)/(max-min))*84;
-}
-
-var pts = hist.map(function(v,i){
-return (i/(hist.length-1)*300)+","+y(v);
-}).join(" ");
-
-svg.innerHTML =
-'<line x1="0" x2="300" y1="'+y(V_HIGH)+'" y2="'+y(V_HIGH)+'" stroke="#d93025" stroke-dasharray="4"/>'+
-'<line x1="0" x2="300" y1="'+y(V_LOW)+'" y2="'+y(V_LOW)+'" stroke="#d93025" stroke-dasharray="4"/>'+
-'<polyline points="'+pts+'" fill="none" stroke="#2f6fed" stroke-width="2"/>';
-}
-
-// DISPLAY DATA
-function render(d,label){
-
-// CORRECT THINGSPEAK FIELD MAPPING
-var v = Number(d.field1);
-var i = Number(d.field2);
-
-var p = Number(d.field3);
-var pf = Number(d.field4);
-var e = Number(d.field5);
-var f = Number(d.field6);
-
-var hasV = d.field1 !== null && d.field1 !== "";
-var hasI = d.field2 !== null && d.field2 !== "";
-
-if(!hasV || !hasI || !Number.isFinite(v) || !Number.isFinite(i)){
-$("status").textContent = "Invalid sensor data";
-return;
-}
-
-var hasP = d.field3 !== null && d.field3 !== "" && Number.isFinite(p);
-var hasPF = d.field4 !== null && d.field4 !== "" && Number.isFinite(pf);
-var hasE = d.field5 !== null && d.field5 !== "" && Number.isFinite(e);
-var hasF = d.field6 !== null && d.field6 !== "" && Number.isFinite(f);
-
-var over = r2(i) > r2(I_HIGH);
-var lowI = r2(i) < r2(I_LOW);
-var high = v > V_HIGH;
-var low = v < V_LOW;
-
-var pfLow = hasPF && hasP && p > 20 && pf < PF_MIN;
-var fBad = hasF && (f < F_MIN || f > F_MAX);
-
-var alert = over || high || low || lowI;
-
-// VALUES
-$("v").textContent = v.toFixed(1);
-$("i").textContent = i.toFixed(2);
-
-$("p").textContent = hasP ? p.toFixed(1) : "--";
-$("pf").textContent = hasPF ? pf.toFixed(2) : "--";
-$("e").textContent = hasE ? e.toFixed(3) : "--";
-$("f").textContent = hasF ? f.toFixed(1) : "--";
-
-// COLOURS
-mark("valV",high || low);
-mark("valI",over || lowI);
-mark("valP",false);
-mark("valPF",pfLow);
-mark("valE",false);
-mark("valF",fBad);
-
-// STATUS
-var s = $("status");
-
-s.textContent =
-over ? "ALERT: Over current" :
-high ? "ALERT: High voltage" :
-low ? "ALERT: Low voltage" :
-lowI ? "ALERT: Low current" :
-"Normal";
-
-s.className = "status " + (alert ? "bad" : "ok");
-
-$("statusCard").className =
-"card" + (alert ? " alert" : "");
-
-// ADDITIONAL ALERTS
-var notes = [];
-
-if(pfLow) notes.push("Low power factor");
-if(fBad) notes.push("Frequency out of range");
-
-$("note").textContent =
-notes.length ? "Check: "+notes.join(", ") : "";
-
-// TIME
-if(label){
-$("time").textContent = label;
-}
-else{
-var when = new Date(d.created_at);
-
-$("time").textContent =
-"Updated: " + when.toLocaleTimeString();
-}
-
-// GRAPH
-hist.push(v);
-
-if(hist.length > 40){
-hist.shift();
-}
-
-draw();
-
-}
-
-// LIVE DATA
-function update(){
-
-if(demo) return;
-
-fetch(DB_URL + "?_=" + Date.now(), {
-cache:"no-store"
-})
-.then(function(r){
-if(!r.ok) throw new Error("Network error");
-return r.json();
-})
-.then(function(d){
-
-if(demo) return;
-
-if(d && d.field1 !== null && d.field2 !== null){
-render(d,null);
-}
-else{
-$("status").textContent = "No sensor data";
-}
-
-})
-.catch(function(){
-
-if(!demo){
-$("status").textContent = "Can't reach database";
-}
-
-});
-
-}
-
-// TEST DATA
-var NORMAL = {
-field1:230,
-field2:10.0,
-field3:2185,
-field4:0.95,
-field5:3.2,
-field6:50.0
-};
-
-function mix(o){
-
-var r = {};
-
-for(var k in NORMAL) r[k] = NORMAL[k];
-for(var k2 in o) r[k2] = o[k2];
-
-return r;
-}
-
-// TEST BUTTONS
-function setDemo(reading,name,btn){
-
-[
-"bN","bH","bL","bC",
-"bI","bP","bF","bLive"
-].forEach(function(id){
-$(id).className = "";
-});
-
-$(btn).className = "on";
-
-if(reading === null){
-
-demo = null;
-hist = [];
 update();
-return;
-
-}
-
-demo = reading;
-hist = [];
-
-for(var k=0;k<8;k++){
-render(demo,"TEST: "+name+" (not real data)");
-}
-
-}
-
-$("bN").onclick = function(){
-setDemo(mix({}),"Normal","bN");
-};
-
-$("bH").onclick = function(){
-setDemo(mix({field1:240}),"High voltage","bH");
-};
-
-$("bL").onclick = function(){
-setDemo(mix({field1:210}),"Low voltage","bL");
-};
-
-$("bC").onclick = function(){
-setDemo(mix({field2:11.0}),"Over current","bC");
-};
-
-$("bI").onclick = function(){
-setDemo(mix({field2:8.0}),"Low current","bI");
-};
-
-$("bP").onclick = function(){
-setDemo(mix({field4:0.6,field3:1380}),"Low power factor","bP");
-};
-
-$("bF").onclick = function(){
-setDemo(mix({field6:48.9}),"Bad frequency","bF");
-};
-
-$("bLive").onclick = function(){
-setDemo(null,"","bLive");
-};
-
-// START
-update();
-setInterval(update,POLL_MS);
-
+setInterval(update, POLL_MS);
 </script>
 </body>
 </html>
